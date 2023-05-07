@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign In - Linux Packet Filtering Firewall</title>
+    <link rel="stylesheet" type="text/css" href="Caccount.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+</head>
+<body>
+  <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+    <a class="navbar-brand" href="#">Linux Packet Filtering Firewall</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'home' %}">Home page</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'configuration' %}">Configuration</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'natconfig' %}">NAT Configuration</a>
+      </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'accountdets' %}">Account Details</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+      </li>
+        </li>
+      </ul>
+    </div>
+</nav>
+
+
+<div class="form-wrapper">
+  <div class="container-fluid">
+    <div class="row justify-content-center">
+      <div class="col-md-5">
+        <div class="card mt-5">
+          <div class="card-header text-center">
+              <h4>My Account Details</h4>
+            </div>
+            <div class="card-body">
+              <form method="POST" action="{% url 'update_account' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                  <label for="name">Name:</label>
+                  <input type="text" name="name" class="form-control" id="name" value="{{ user.name }}">
+                </div>
+                <div class="form-group">
+                  <label for="surname">Surname:</label>
+                  <input type="text" name="surname" class="form-control" id="surname" value="{{ user.surname }}">
+                </div>
+                <div class="form-group">
+                  <label for="email">Email:</label>
+                  <input type="email" name="email" class="form-control" id="email" value="{{ user.email }}">
+                </div>
+                <div class="form-group">
+                  <label for="username">Username:</label>
+                  <input type="text" name="username" class="form-control" id="username" value="{{ user.username }}">
+                </div>
+                <div class="form-group">
+                  <label for="password">New Password (leave blank to keep current password):</label>
+                  <input type="password" name="password" class="form-control" id="password">
+                </div>
+                {% csrf_token %}
+               <div class="alert alert-success">
+                <button type="submit" class="btn btn-primary">Update</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+  
+  </html>
+  
+  <!-- FOOTER -->
+  <footer class="container">
+    <p class="float-end"><a href="#">Back to top</a></p>
+    <p>&copy; 2021-2023 Firewall Configuration Website, Inc. &middot; <a href="#">Privacy</a> &middot; <a href="#">Terms</a></p>
+</footer>

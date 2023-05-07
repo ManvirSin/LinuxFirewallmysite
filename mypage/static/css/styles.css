@@ -1,0 +1,29 @@
+table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  
+  th, td {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+  }
+  
+  th {
+    background-color: #dddddd;
+  }
+  
+  <td class="actions-column">
+     <button class="btn btn-danger delete-rule" data-rule-id="{{ rule.id }}">Delete</button>
+     <button class="btn btn-info modify-rule" data-rule-id="{{ rule.id }}">Modify</button>
+  </td>
+  
+  .actions-column {
+    position: relative;
+  }
+  
+  .actions-column button {
+    position: absolute;
+    bottom: 0;
+  }
+  

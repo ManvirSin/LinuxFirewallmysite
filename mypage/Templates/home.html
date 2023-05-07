@@ -1,0 +1,168 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.72.0">
+    <title>Firewall Configuration Website</title>
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css"
+        integrity="sha384-r4NyP46KrjDleawBgD5tp8Y7UzmLA05oM1iAEQ17CSuDqnUK2+k9luXQOfXJCJ4I" crossorigin="anonymous">
+    <link href="home.css" rel="stylesheet">
+</head>
+
+<body>
+
+<header>
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Firewall Configuration Website</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse"
+                aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav mr-auto mb-2 mb-md-0">
+                    <li class="nav-item active">
+                        <a class="nav-link" aria-current="page" href="#">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'create_account' %}">Create Account</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                    </li>
+                    {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+                    </li>
+                    {% endif %}
+                </ul>
+                {% if user.is_authenticated %}
+                <span class="navbar-text">
+                    Logged in as: {{ user.username }}
+                </span>
+                <li class="container">
+                    {% endif %}
+                </div>
+              </ul>
+              {% if user.is_authenticated %}
+                <li class="nav-item">
+                  <a class="nav-link logout" href="{% url 'logout' %}">Logout</a>
+                </li>
+              {% endif %}
+            </div>
+          </div>
+        </nav>
+      </header>
+    
+      <main>
+    
+          <!-- START THE FEATURETTES -->
+    
+          <div class="container">
+        <hr class="featurette-divider">
+        <h1 class="display-4 text-center mt-5">Welcome To This Linux Firewall Application!</h1>
+        <p class="lead text-center">This is a Linux packet filtering firewall application built using Django and Python.</p>
+        <hr class="my-5">
+        <p class="text-center">The application allows users to create, view, and delete firewall
+           rules using a web interface. Users can also login and create new user accounts. In this page it will introduce you to the
+          Linux firewall configuration webpage and how to use it. To use the Linux firewall configuration you must create an account
+        and login. This will ensure the safety of your account and your firewall rules.</p>
+    </div>
+
+          <div class="row featurette">
+            <div class="col-md-7">
+              <h2 class="featurette-heading">First featurette heading. <span class="text-muted">It’ll blow your mind.</span>
+              </h2>
+              <p class="lead">To use the Linux firewall configuration webpage, new users would have to create an account and login. 
+                This is to ensure the safety of their account and their firewall rules. Once they have logged in, 
+                they can then create new firewall rules, view existing ones, and delete any they no longer need. 
+              </p>
+            </div>
+            <div class="col-md-5">
+              <svg class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500"
+                height="500" xmlns="http://www.w3.org/2000/svg" aria-label="Placeholder: 500x500"
+                preserveAspectRatio="xMidYMid slice" role="img" focusable="false">
+                <title>Placeholder</title>
+                <rect width="100%" height="100%" fill="#eee" /><text x="50%" y="50%" fill="#aaa" dy=".3em">500x500</text>
+              </svg>
+    
+            </div>
+          </div>
+    
+          <hr class="featurette-divider">
+    
+          <div class="row featurette">
+            <div class="col-md-7 order-md-2">
+              <h2 class="featurette-heading">Oh yeah, it’s that good. <span class="text-muted">See for yourself.</span></h2>
+              <p class="lead">In terms of the Linux packet filtering firewall, this refers to the built-in firewall functionality
+                within the Linux operating system. It works by using a set of rules to decide which packets should be allowed 
+                through and which should be blocked. These rules are typically defined using iptables, which is a command-line
+                utility for managing firewall rules.</p>
+            </div>
+            <div class="col-md-5 order-md-1">
+              <svg class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500"
+                height="500" xmlns="http://www.w3.org/2000/svg" aria-label="Placeholder: 500x500"
+                preserveAspectRatio="xMidYMid slice" role="img" focusable="false">
+                <title>Placeholder</title>
+                <rect width="100%" height="100%" fill="#eee" /><text x="50%" y="50%" fill="#aaa" dy=".3em">500x500</text>
+              </svg>
+    
+            </div>
+          </div>
+    
+          <hr class="featurette-divider">
+    
+          <div class="row featurette">
+            <div class="col-md-7">
+              <h2 class="featurette-heading">And lastly, this one. <span class="text-muted">Checkmate.</span></h2>
+              <p class="lead">In iptables, there are two main tables: the nat table and the filter table. 
+              The nat table is used for network address translation (NAT) and is responsible for rewriting 
+              the source or destination IP address of packets as they pass through the firewall. 
+              The filter table is used for packet filtering and is responsible for deciding which packets 
+              should be allowed through and which should be blocked based on a set of rules.</p>
+            </div>
+            <div class="col-md-5">
+              <svg class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500"
+                height="500" xmlns="http://www.w3.org/2000/svg" aria-label="Placeholder: 500x500"
+                preserveAspectRatio="xMidYMid slice" role="img" focusable="false">
+                <title>Placeholder</title>
+                <rect width="100%" height="100%" fill="#eee" /><text x="50%" y="50%" fill="#aaa" dy=".3em">500x500</text>
+              </svg>
+    
+            </div>
+          </div>
+    
+          <hr class="featurette-divider">
+    
+          <!-- /END THE FEATURETTES -->
+  
+    
+        <!-- FOOTER -->
+      <footer class="container">
+        <p class="float-end"><a href="#">Back to top</a></p>
+        <p>&copy; 2021-2023 Firewall Configuration Website, Inc. &middot; <a href="#">Privacy</a> &middot; <a href="#">Terms</a></p>
+      </footer>
+    </main>
+
+     <!-- Bootstrap core JavaScript
+  ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../assets/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.9.0/feather.min.js"
+      integrity="sha512-2aRp6gY0ewKndW8sFrB/+xT1bHLvM6BG7W8LcbETz07d7yGJnLewWkTV8hoTDBTPrTyaTjvHnWl8NYU9gb6Ug=="
+      crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/chart.min.js"
+      integrity="sha384-NR0c94hN4ZAnbtEsAXD/3C4pXY9XJXXV7MNVmD0uV7URmymPlEaVZ0w1vMfjn7PK"
+      crossorigin="anonymous"></script>
+
+    <script src="dashboard.js"></script>
+</body>
+
+</html>

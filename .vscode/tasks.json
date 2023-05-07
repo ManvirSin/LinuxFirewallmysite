@@ -1,0 +1,11 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "Live Preview",
+			"workspacePath": "c:\\Users\\manvi\\DjangoProjects\\mysite",
+			"problemMatcher": [],
+			"label": "Live Preview: Run Server"
+		}
+	]
+}

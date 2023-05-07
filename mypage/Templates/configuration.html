@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Linux Packet Filtering Firewall</title>
+  <link rel="stylesheet" type="text/css" href='styles.css'>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+  integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://example.com/path/to/your/javascript/buttoncon.js"></script>
+</head>
+<body>
+  <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+    <div class="container-fluid">
+    <a class="navbar-brand" class="text-center" href="#">Linux Packet Filtering Firewall</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'home' %}">Home page</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'configuration' %}">Configuration</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'natconfig' %}">NAT Configuration</a>
+        </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'accountdets' %}">Account Details</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+        </li>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container mt-5">
+    <h1>Filter Table Configuration</h1>
+    <p>Firewall IP: {{ firewall_ip }}</p>
+    <div class="row">
+      <div class="col-md-6 offset-md-3">
+        <form id="rule-form" method="POST" action="{% url 'configuration' %}">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="rule-name">Rule Name</label>
+            <input type="text" class="form-control" id="rule-name" name="rule-name" required>
+          </div>
+          <div class="form-group">
+            <label for="chain">Chain</label>
+            <select class="form-control" id="chain" name="chain" required>
+              <option value="INPUT">INPUT</option>
+              <option value="FORWARD">FORWARD</option>
+              <option value="OUTPUT">OUTPUT</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="source-ip">Source IP Address</label>
+            <input type="text" class="form-control" id="source-ip" name="source-ip" value="{{ firewall_ip }}" required readonly>
+          </div>
+          <div class="form-group">
+            <label for="destination-ip">Destination IP Address</label>
+            <input type="text" class="form-control" id="destination-ip" name="destination-ip" required>
+          </div>
+          <div class="form-group">
+            <label for="protocol">Protocol</label>
+            <select class="form-control" id="protocol" name="protocol" required>
+              <option value="tcp">TCP</option>
+              <option value="udp">UDP</option>
+              <option value="icmp">ICMP</option>
+              <option value="all">All</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="source-port">Source Port</label>
+            <input type="text" class="form-control" id="source-port" name="source-port">
+          </div>
+          <div class="form-group">
+            <label for="destination-port">Destination Port</label>
+            <input type="text" class="form-control" id="destination-port" name="destination-port">
+          </div>
+          <div class="form-group">
+            <label for="action">Action</label>
+            <select class="form-control" id="action" name="action" required>
+              <option value="ACCEPT">ACCEPT</option>
+              <option value="DROP">DROP</option>
+              <option value="REJECT">REJECT</option>
+              </select>
+              </div>
+              <div class="form-group form-check">
+              <input type="checkbox" class="form-check-input" id="log-traffic" name="log-traffic">
+              <label class="form-check-label" for="log-traffic">Log Traffic</label>
+              </div>
+              <div class="form-group form-check">
+              <input type="checkbox" class="form-check-input" id="alert-user" name="alert-user">
+              <label class="form-check-label" for="alert-user">Alert User</label>
+              </div>
+              {% if form.non_field_errors %}
+              <div class="alert alert-danger">
+              {% for error in form.non_field_errors %}
+              {{ error }}
+              {% endfor %}
+              </div>
+              {% endif %}
+              <button type="submit" class="btn btn-primary" name="submit" value="add">Add Rule</button>
+              <button type="submit" class="btn btn-primary" name="submit" value="clear">Clear Rule</button>
+              <a href="{% url 'natconfig' %}" class="btn btn-primary float-right">Next</a>
+              </form>
+              </div>
+              </div>
+
+<!-- FOOTER -->
+<footer class="container">
+  <p></p>
+  <p class="float-end"><a href="#">Back to top</a></p>
+  <p>&copy; 2021-2023 Firewall Configuration Website, Inc. &middot; <a href="#">Privacy</a> &middot; <a href="#">Terms</a></p>
+</footer>
+</main>
+</body>
+</html>
