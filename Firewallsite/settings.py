@@ -30,7 +30,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['127.0.0.1', '31.205.19.116']
+ALLOWED_HOSTS = ['127.0.0.1', '31.205.19.116', '192.168.48.135']
 
 
 FIREWALL_IP = config('FIREWALL_IP')
@@ -46,10 +46,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'debug_toolbar',
     'bootstrap5',
-    'mypage',
     'captcha',
-    'mysite',
+    'mypage',
     'rest_framework'
 ]
 
@@ -63,12 +63,14 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-LOGOUT_REDIRECT_URL = 'home'
+
+LOGIN_REDIRECT_URL = 'dashboard' 
 
 AUTH_USER_MODEL = 'mypage.CustomUser'
 

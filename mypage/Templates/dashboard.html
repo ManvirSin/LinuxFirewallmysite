@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
           integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
           crossorigin="anonymous">
+          <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+          integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2"
+          crossorigin="anonymous"></script>
+
     <link rel="stylesheet" href="{% static 'dashboard.css' %}">
     <script src="{% static 'firewall_rules.js' %}"></script>
 </head>
@@ -67,7 +71,7 @@
             <td>
               <a href="{% url 'natconfig' %}" class="btn btn-success">Add</a>
               <a href="{% url 'modify_nat_rule' rule.id %}" class="btn btn-info">Modify</a>
-              <a href="{% url 'delete_nat_rule' rule.id %}" class="btn btn-danger" onclick="return confirmDelete();">Delete</a>
+              <a href="#" class="btn btn-danger" onclick="deleteNatRule({{ rule.id }});">Delete</a>
             </td>
           </tr>
           {% empty %}
@@ -87,33 +91,37 @@
   <h2>Configuration Rules</h2>
   <table class="table table-striped">
     <thead>
-    <tr>
+      <tr>
         <th>Rule Name</th>
-        <th>Direction</th>
-        <th>IP Address</th>
-        <th>Traffic Type</th>
-        <th>Port Number</th>
-        <th>Protocol Type</th>
+        <th>Chain</th>
+        <th>Source IP Address</th>
+        <th>Destination IP Address</th>
+        <th>Protocol</th>
+        <th>Source Port</th>
+        <th>Destination Port</th>
+        <th>Action</th>
         <th>Log Traffic</th>
         <th>Alert User</th>
         <th>Actions</th>
-    </tr>
+      </tr>
     </thead>
     <tbody>
-    {% for rule in firewall_rules %}
-    <tr>
-      <td>{{ rule.rule_name }}</td>
-      <td>{{ rule.direction }}</td>
-      <td>{{ rule.ip_address }}</td>
-      <td>{{ rule.traffic_type }}</td>
-      <td>{{ rule.port_number }}</td>
-      <td>{{ rule.protocol_type }}</td>
-      <td>{{ rule.log_traffic }}</td>
-      <td>{{ rule.alert_user }}</td>
-      <td>
-            <a href="{% url 'modify_firewall_rule' rule.id %}" class="btn btn-warning">Modify</a>
-            <script src="{% static 'dashboard.js' %}"></script>
-            <a href={% url 'delete_firewall_rule' rule.id %} class="btn btn-danger" onclick="deleteFirewallRule({{ rule.id }});">Delete</a>
+      {% for rule in firewall_rules %}
+      <tr>
+        <td>{{ rule.rule_name }}</td>
+        <td>{{ rule.chain }}</td>
+        <td>{{ rule.source_ip }}</td>
+        <td>{{ rule.destination_ip }}</td>
+        <td>{{ rule.protocol }}</td>
+        <td>{{ rule.source_port }}</td>
+        <td>{{ rule.destination_port }}</td>
+        <td>{{ rule.action }}</td>
+        <td>{{ rule.log_traffic }}</td>
+        <td>{{ rule.alert_user }}</td>
+        <td>
+          <a href="{% url 'modify_firewall_rule' rule.id %}" class="btn btn-warning">Modify</a>
+          <a href="#" class="btn btn-danger" onclick="deleteFirewallRule({{ rule.id }});">Delete</a>
+          <script src="{% static 'dashboard.js' %}"></script>
         </td>
     </tr>
     {% endfor %}                

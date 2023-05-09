@@ -1,4 +1,6 @@
 import os
+from turtle import update
+from django.views import View
 import paramiko
 from subprocess import run, PIPE
 from paramiko import SSHClient, AutoAddPolicy
@@ -7,28 +9,197 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.contrib.auth import get_user_model
 from django.views.generic.edit import CreateView
 from .forms import CustomUserCreationForm, FirewallRuleForm, NatRuleForm, UserCreateForm
 from .models import FirewallRule, NAT, CustomUser
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.views.generic import FormView
+from django.views.generic import TemplateView
+from django.views.generic import CreateView, UpdateView, DeleteView, ListView
+from django.utils.decorators import method_decorator
+from .ssh import connect_ssh, generate_iptables_command
 
-FIREWALL_IP = os.getenv('FIREWALL_IP')
-FIREWALL_USERNAME = os.getenv('FIREWALL_USERNAME')
-FIREWALL_PASSWORD = os.getenv('FIREWALL_PASSWORD')
+class BaseFirewallView(View):
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+    
+@method_decorator(login_required, name='dispatch')
+class ConfigurationView(CreateView):
+    form_class = FirewallRuleForm
+    template_name = 'configuration.html'
+    success_url = reverse_lazy('dashboard')
 
-def connect_ssh():
-    ssh_client = SSHClient()
-    ssh_client.set_missing_host_key_policy(AutoAddPolicy())
-    ssh_client.connect(settings.FIREWALL_IP, username=settings.FIREWALL_USERNAME, password=settings.FIREWALL_PASSWORD)
-    return ssh_client
+    def form_valid(self, form):
+        form.instance.user = self.request.user  # Set the user field
+        response = super().form_valid(form)
 
+        # Generate iptables command and execute it on the remote Linux machine
+        iptables_cmd = generate_iptables_command(form.instance)
+        ssh_client = connect_ssh()
+        ssh_client.exec_command(iptables_cmd)
+        ssh_client.close()
+
+        return response
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['firewall_ip'] = settings.FIREWALL_IP
+        return context
+    
+@method_decorator(login_required, name='dispatch')
+class UpdateFirewallRuleView(UpdateView):
+    model = FirewallRule
+    form_class = FirewallRuleForm
+    template_name = 'update_firewall_rule.html'
+    success_url = reverse_lazy('dashboard')
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+
+        iptables_command = generate_iptables_command(self.object, update=True)
+        ssh_client = connect_ssh()
+        ssh_client.exec_command(iptables_command)
+        ssh_client.close()
+
+        messages.success(self.request, 'Firewall rule updated successfully!')
+        return response
+    
+@method_decorator(login_required, name='dispatch')
+class DashboardView(ListView):
+    template_name = 'dashboard.html'
+    context_object_name = 'firewall_rules'
+
+    def get_queryset(self):
+        return FirewallRule.objects.filter(user=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['nat_rules'] = NAT.objects.filter(user=self.request.user)
+        return context
+
+class FirewallRuleFormView(BaseFirewallView, CreateView):
+    form_class = FirewallRuleForm
+    template_name = 'configuration.html'
+    success_url = reverse_lazy('dashboard')
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user  # Set the user field
+        response = super().form_valid(form)
+        
+        # Generate iptables command and execute it on the remote Linux machine
+        iptables_cmd = generate_iptables_command(form.instance)
+        ssh_client = connect_ssh()
+        ssh_client.exec_command(iptables_cmd)
+        ssh_client.close()
+
+        return response
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['firewall_ip'] = '192.168.48.135'  # example firewall IP
+        return context
+
+class ModifyFirewallRuleView(BaseFirewallView, UpdateView):
+    model = FirewallRule
+    form_class = FirewallRuleForm
+    template_name = 'configuration.html'
+    pk_url_kwarg = 'rule_id'
+    success_url = reverse_lazy('configuration')
+
+class DeleteFirewallRuleView(BaseFirewallView, DeleteView):
+    model = FirewallRule
+    pk_url_kwarg = 'rule_id'
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            rule = self.get_object()
+            rule.delete()
+            return JsonResponse({'status': 'success'})
+        except FirewallRule.DoesNotExist:
+            return JsonResponse({'status': 'failure'})
+
+class GetFirewallRulesView(BaseFirewallView, ListView):
+    model = FirewallRule
+
+    def get(self, request, *args, **kwargs):
+        rules = self.get_queryset()
+        rules_data = [{'name': rule.name, 'rule': rule.rule} for rule in rules]
+        return JsonResponse(rules_data, safe=False)
+
+class NatConfigView(FormView):
+    form_class = NatRuleForm
+    template_name = 'natconfig.html'
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial['firewall_ip'] = settings.FIREWALL_IP
+        return initial
+
+    def form_valid(self, form):
+        # The code from your natconfig_view function goes here
+        user = CustomUser.objects.get(username=self.request.user.username)
+        source_ip = settings.FIREWALL_IP
+        destination_ip = form.cleaned_data['destination_ip']
+        protocol = form.cleaned_data['protocol']
+        source_port = form.cleaned_data['source_port']
+        destination_port = form.cleaned_data['destination_port']
+
+        # Save the form to a new_nat_rule object without committing it to the database yet
+        new_nat_rule = form.save(commit=False)
+
+        # Set the user for the new NAT rule
+        new_nat_rule.user = self.request.user
+
+        # Create an SSH client
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(settings.FIREWALL_IP, username=settings.FIREWALL_USERNAME, password=settings.FIREWALL_PASSWORD)
+
+        # Construct the iptables command for DNAT
+        iptables_dnat_command = f"sudo iptables -t nat -A PREROUTING -p {protocol} --dport {source_port} -j DNAT --to-destination {destination_ip}:{destination_port}"
+
+        # Execute the iptables command for DNAT
+        stdin, stdout, stderr = ssh.exec_command(iptables_dnat_command)
+
+        # Construct the iptables command for SNAT
+        iptables_snat_command = f"sudo iptables -t nat -A POSTROUTING -p {protocol} --dport {destination_port} -d {destination_ip} -j SNAT --to-source {source_ip}"
+
+        # Execute the iptables command for SNAT
+        stdin, stdout, stderr = ssh.exec_command(iptables_snat_command)
+
+        # Read the NAT table from the Linux machine
+        stdin, stdout, stderr = ssh.exec_command('sudo iptables -t nat -L')
+
+        # Save the new_nat_rule to the database
+        new_nat_rule.save()
+
+        ssh.close()
+
+        messages.success(self.request, 'NAT rule added successfully!')
+        return redirect('dashboard')  # Redirect to dashboard page after successfully submitting form
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user'] = self.request.user
+        context['source_ip'] = settings.FIREWALL_IP
+        return context
+
+natconfig_view = login_required(NatConfigView.as_view())
+
+@method_decorator(login_required, name='dispatch')
+class DeleteNatRuleView(DeleteView):
+    model = NAT
+    success_url = reverse_lazy('dashboard')
+
+    def get(self, *args, **kwargs):
+        return self.post(*args, **kwargs)
 
 def home(request):
     return render(request, 'home.html')
-
 
 def login_view(request):
     if request.method == 'POST':
@@ -43,53 +214,77 @@ def login_view(request):
             return render(request, 'login.html')
     else:
         return render(request, 'login.html')
-
-
-
+    
 @login_required
-def firewall_view(request):
-    ssh = connect_ssh()
-    stdin, stdout, stderr = ssh.exec_command('iptables -L')
-    output = stdout.read()
-    ssh.close()
-    return render(request, 'configuration.html', {'output': output.decode('utf-8')})
+def profile_view(request):
+    # Your profile view logic here
+    return render(request, 'profile.html')
+
+    
+
+class FirewallView(TemplateView):
+    template_name = 'configuration.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        ssh = connect_ssh()
+        stdin, stdout, stderr = ssh.exec_command('iptables -L')
+        output = stdout.read()
+        ssh.close()
+        context['output'] = output.decode('utf-8')
+        return context
+
+firewall_view = login_required(FirewallView.as_view())
 
 def configure_firewall(request):
     if request.method == 'POST':
         form = FirewallRuleForm(request.POST, firewall_ip=settings.FIREWALL_IP)
         if form.is_valid():
+            # Retrieve the form data
             rule_name = form.cleaned_data['rule_name']
-            direction = form.cleaned_data['direction']
-            ip_address = form.cleaned_data['ip_address']
-            traffic_type = form.cleaned_data['traffic_type']
-            port_number = form.cleaned_data['port_number']
-            protocol_type = form.cleaned_data['protocol_type']
+            chain = form.cleaned_data['chain']
+            source_ip = settings.FIREWALL_IP
+            destination_ip = form.cleaned_data['destination_ip']
+            protocol = form.cleaned_data['protocol']
+            source_port = form.cleaned_data['source_port']
+            destination_port = form.cleaned_data['destination_port']
+            action = form.cleaned_data['action']
             log_traffic = form.cleaned_data['log_traffic']
             alert_user = form.cleaned_data['alert_user']
             
-            #saves the form to a new rule object without committing to the database yet
-            new_rule = form.save(commit=False)
+            # Create a new firewall rule object
+            new_rule = FirewallRule(user=request.user, rule_name=rule_name, chain=chain,
+                                    source_ip=source_ip, destination_ip=destination_ip,
+                                    protocol=protocol, source_port=source_port,
+                                    destination_port=destination_port, action=action,
+                                    log_traffic=log_traffic, alert_user=alert_user)
             
-            new_rule.user = request.user
-
             # Create an SSH client
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(FIREWALL_IP, username=FIREWALL_USERNAME, password=FIREWALL_PASSWORD)
+            ssh.connect(settings.FIREWALL_IP, username=settings.FIREWALL_USERNAME, password=settings.FIREWALL_PASSWORD)
             
-           # Generate the iptables command using the new function
+            # Generate the iptables command using the new function
             iptables_command = generate_iptables_command(new_rule)
+
+            # Print the iptables command for debugging purposes
+            print("Generated iptables command:", iptables_command)
 
             # Execute the iptables command
             stdin, stdout, stderr = ssh.exec_command(iptables_command)
+
+            # Print the output and errors for debugging purposes
+            print("Output:", stdout.read())
+            print("Errors:", stderr.read())
+
             ssh.close()
             
-            #saves the new rule to the database
+            # Save the new rule to the database
             new_rule.save()
 
             # Redirect to the configuration page with a success message
             messages.success(request, 'Firewall rule added successfully!')
-            return redirect('natconfig.html')
+            return redirect('dashboard')
         else:
             # Render the configuration page with the form and errors
             return render(request, 'configuration.html', {'form': form})
@@ -97,6 +292,51 @@ def configure_firewall(request):
         # Render the configuration page with the form
         form = FirewallRuleForm()
         return render(request, 'configuration.html', {'form': form})
+    
+def dashboard(request):
+    if request.method == 'POST':
+        firewall_form = FirewallRuleForm(request.POST, prefix='firewall_form')
+        nat_form = NatRuleForm(request.POST, prefix='nat_form')
+
+        if firewall_form.is_valid():
+            firewall_rule = firewall_form.save(commit=False)
+            firewall_rule.user = request.user
+            firewall_rule.save()
+
+        if nat_form.is_valid():
+            nat_rule = nat_form.save(commit=False)
+            nat_rule.user = request.user
+            nat_rule.save()
+
+    else:
+        firewall_form = FirewallRuleForm(prefix='firewall_form')
+        nat_form = NatRuleForm(prefix='nat_form')
+
+    firewall_rules = FirewallRule.objects.filter(user=request.user)
+    nat_rules = NatRuleForm.objects.filter(user=request.user)
+
+    context = {
+        'firewall_rules': firewall_rules,
+        'nat_rules': nat_rules,
+        'firewall_form': firewall_form,
+        'nat_form': nat_form,
+    }
+
+
+def natconfig(request):
+    if request.method == 'POST':
+        form = NatRuleForm(request.POST)
+        if form.is_valid():
+            nat_rule = form.save(commit=False)
+            nat_rule.user = request.user
+            nat_rule.save()
+            return redirect('dashboard')
+    else:
+        form = NatRuleForm()
+
+    context = {'form': form}
+    return render(request, 'natconfig.html', context)
+
 
 def create_account(request):
     if request.method == 'POST':
@@ -113,7 +353,6 @@ def create_account(request):
         form = CustomUserCreationForm()
     return render(request, 'create_account.html', {'form': form})
 
-
 class AccountView(CreateView):
     form_class = UserCreateForm
     template_name = 'create_account.html'
@@ -125,7 +364,6 @@ class AccountView(CreateView):
         return redirect(self.success_url)
 
 User = get_user_model()
-
 
 @login_required
 def update_account(request):
@@ -164,7 +402,7 @@ def update_account(request):
 
 @login_required
 def accountdets_view(request):
-    user = CustomUser.objects.get(username=request.user.username)
+    user = request.user
     return render(request, 'accountdets.html', {'user': user})
 
 @login_required
@@ -194,87 +432,69 @@ def configuration_view(request):
         'user': request.user,
         'firewall_ip': settings.FIREWALL_IP,
     }
-    return render(request, 'configuration.html', context)
+    return render(request, 'configuration.html', {'form': form, 'user': request.user, 'source_ip': settings.FIREWALL_IP})
 
-def generate_iptables_command(rule):
-    iptables_cmd = f"iptables -A {rule.direction.upper()} -p {rule.protocol_type}"
-
-    if rule.ip_address:
-        iptables_cmd += f" -s {rule.ip_address}"
-
-    if rule.port_number:
-        iptables_cmd += f" --dport {rule.port_number}"
-
-    if rule.traffic_type:
-        iptables_cmd += f" -m {rule.traffic_type}"
-
-    if rule.log_traffic:
-        iptables_cmd += " -j LOG"
-
-    if rule.alert_user:
-        iptables_cmd += " -j ALERT"
-
-    return iptables_cmd
-
-
-@login_required
-def dashboard_view(request):
-    user = request.user  # Use the request.user object directly
-    firewall_rules = FirewallRule.objects.filter(user=user)  # Filter rules by the logged-in user
-    nat_rules = NAT.objects.filter(user=user)  # Filter NAT rules by the logged-in user
-    context = {
-        'firewall_rules': firewall_rules,
-        'user': user,
-        'nat_rules': nat_rules,
-    }
-
-    print("Firewall Rules:", firewall_rules, "NAT Rules:", nat_rules)  # Add this line to print the firewall and NAT rules
-
-    return render(request, 'dashboard.html', context)
-
-
-class FirewallRuleFormView(CreateView):
+class UpdateFirewallRuleView(UpdateView):
+    model = FirewallRule
     form_class = FirewallRuleForm
-    template_name = 'configuration.html'
-    success_url = reverse_lazy('dashboard')
+    template_name = 'update_firewall_rule.html'
 
     def form_valid(self, form):
-        form.instance.user = self.request.user  # Set the user field
-        response = super().form_valid(form)
-        
-        # Generate iptables command and execute it on the remote Linux machine
-        iptables_cmd = generate_iptables_command(form.instance)
+        updated_rule = form.save(commit=False)
+        updated_rule.user = self.request.user
+        updated_rule.save()
+
+        # Modify this function to handle updates as well
+        iptables_command = generate_iptables_command(updated_rule, update=True)
         ssh_client = connect_ssh()
-        ssh_client.exec_command(iptables_cmd)
+        ssh_client.exec_command(iptables_command)
         ssh_client.close()
 
-        return response
+        messages.success(self.request, 'Firewall rule updated successfully!')
+        return redirect('dashboard')
 
+update_firewall_rule = login_required(UpdateFirewallRuleView.as_view())
 
-def modify_firewall_rule(request, rule_id):
-    rule = FirewallRule.objects.get(pk=rule_id)
-    if request.method == 'POST':
-        form = FirewallRuleForm(request.POST, instance=rule)
-        if form.is_valid():
-            form.save()
-            return redirect('configuration')
-    else:
-        form = FirewallRuleForm(instance=rule)
-    return render(request, 'configuration.html', {'form': form, 'rule': rule})
+class DashboardView(TemplateView):
+    template_name = 'dashboard.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        context['firewall_rules'] = FirewallRule.objects.filter(user=user)
+        context['nat_rules'] = NAT.objects.filter(user=user)
+        context['user'] = user
+        return context
 
-def delete_firewall_rule(request, rule_id):
-    try:
-        rule = FirewallRule.objects.get(pk=rule_id)
-        rule.delete()
+dashboard_view = login_required(DashboardView.as_view())
+
+class ModifyFirewallRuleView(UpdateView):
+    model = FirewallRule
+    form_class = FirewallRuleForm
+    template_name = 'configuration.html'
+
+    def get_success_url(self):
+        return reverse('configuration')
+
+modify_firewall_rule = login_required(ModifyFirewallRuleView.as_view())
+
+class DeleteFirewallRuleView(DeleteView):
+    model = FirewallRule
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.delete()
         return JsonResponse({'status': 'success'})
-    except FirewallRule.DoesNotExist:
-        return JsonResponse({'status': 'failure'})
 
-def get_firewall_rules(request):
-    rules = FirewallRule.objects.all()
-    rules_data = [{'name': rule.name, 'rule': rule.rule} for rule in rules]
-    return JsonResponse(rules_data, safe=False)
+delete_firewall_rule = login_required(DeleteFirewallRuleView.as_view())
+
+class GetFirewallRulesView(View):
+    def get(self, request):
+        rules = FirewallRule.objects.all()
+        rules_data = [{'name': rule.name, 'rule': rule.rule} for rule in rules]
+        return JsonResponse(rules_data, safe=False)
+
+get_firewall_rules = login_required(GetFirewallRulesView.as_view())
 
 @login_required
 def natconfig_view(request):
@@ -310,11 +530,14 @@ def natconfig_view(request):
 
             # Execute the iptables command for SNAT
             stdin, stdout, stderr = ssh.exec_command(iptables_snat_command)
-
-            ssh.close()
-
+            
+            # Read the NAT table from the Linux machine
+            stdin, stdout, stderr = ssh.exec_command('sudo iptables -t nat -L')
+            
             # Save the new_nat_rule to the database
             new_nat_rule.save()
+
+            ssh.close()
 
             messages.success(request, 'NAT rule added successfully!')
             return redirect('dashboard')  # Redirect to dashboard page after successfully submitting form
@@ -323,33 +546,30 @@ def natconfig_view(request):
             return render(request, 'natconfig.html', {'form': form, 'user': user, 'firewall_ip': settings.FIREWALL_IP})
     else:
         form = NatRuleForm(firewall_ip=settings.FIREWALL_IP)
-    return render(request, 'natconfig.html', {'form': form, 'user': user, 'firewall_ip': settings.FIREWALL_IP})
-
-
-
-@login_required
-def clear_nat_rules(request):
-    NAT.objects.all().delete()
-    return redirect('dashboard')
-
-@login_required
-def get_nat_rules(request):
-    nat_rules = NAT.objects.all().values()
-    return JsonResponse(list(nat_rules), safe=False)
-
-@login_required
-def delete_nat_rule(request, rule_id):
-    rule = get_object_or_404(NAT, pk=rule_id)
-    rule.delete()
-    return redirect('dashboard')
-
-@login_required
-def modify_nat_rule(request, rule_id):
-    rule = get_object_or_404(NAT, id=rule_id)
-    form = NatRuleForm(request.POST or None, instance=rule)
-    if form.is_valid():
-        form.save()
+    return render(request, 'natconfig.html', {'form': form, 'user': user, 'source_ip': settings.FIREWALL_IP})
+class ClearNatRulesView(View):
+    def get(self, request):
+        NAT.objects.all().delete()
         return redirect('dashboard')
-    else:
-        form = NatRuleForm(instance=rule)
-    return render(request, 'modify_nat_rule.html', {'form': form, 'rule': rule})
+
+clear_nat_rules = login_required(ClearNatRulesView.as_view())
+
+class GetNatRulesView(View):
+    def get(self, request):
+        nat_rules = NAT.objects.all().values()
+        return JsonResponse(list(nat_rules), safe=False)
+
+get_nat_rules = login_required(GetNatRulesView.as_view())
+
+class DeleteNatRuleView(DeleteView):
+    model = NAT
+    success_url = reverse_lazy('dashboard')
+
+delete_nat_rule = login_required(DeleteNatRuleView.as_view())
+class ModifyNatRuleView(UpdateView):
+    model = NAT
+    form_class = NatRuleForm
+    template_name = 'modify_nat_rule.html'
+    success_url = reverse_lazy('dashboard')
+
+modify_nat_rule = login_required(ModifyNatRuleView.as_view())

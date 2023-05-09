@@ -12,12 +12,7 @@ table {
   th {
     background-color: #dddddd;
   }
-  
-  <td class="actions-column">
-     <button class="btn btn-danger delete-rule" data-rule-id="{{ rule.id }}">Delete</button>
-     <button class="btn btn-info modify-rule" data-rule-id="{{ rule.id }}">Modify</button>
-  </td>
-  
+
   .actions-column {
     position: relative;
   }

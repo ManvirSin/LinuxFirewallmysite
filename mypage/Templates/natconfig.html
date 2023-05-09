@@ -9,6 +9,7 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="mysite/static/js/buttoncon.js"></script>
+    <script src="mysite/static/js/natconfig_validation.js"></script>
     <link rel="stylesheet" type="text/css" href="natconfig.css">
 </head>
 
@@ -92,12 +93,6 @@
                 <label for="{{ form.destination_port.id_for_label }}">Destination Port:</label>
                 {{ form.destination_port }}
             </div>
-            
-            <!-- Add the target_ip field snippet here -->
-            <div class="form-group">
-                <label for="{{ form.target_ip.id_for_label }}">Target IP:</label>
-                {{ form.target_ip }}
-            </div>
 
             {% if form.non_field_errors %}
             <div class="alert alert-danger">
@@ -107,36 +102,8 @@
             </div>
         {% endif %}
         <button type="submit" class="btn btn-primary">Submit</button>
+        <p></p>
     </form>
-    
-        <!-- NAT Table Rules -->
-        <section class="mt-5">
-            <h2>NAT Table Rules</h2>
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Source IP</th>
-                        <th>Destination IP</th>
-                        <th>Protocol</th>
-                        <th>Source Port</th>
-                        <th>Destination Port</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td class="actions-column">
-                            <button class="btn btn-danger delete-rule" data-rule-id="{{ rule.id }}">Delete</button>
-                            <button class="btn btn-info modify-rule" data-rule-id="{{ rule.id }}">Modify</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
 
             <div class="d-flex justify-content-between">
                 <a href="{% url 'configuration' %}" class="btn btn-primary">Back</a>
@@ -148,6 +115,10 @@
 
         <!-- FOOTER -->
       <footer class="container">
+        <p></p>
+        <p></p> 
+        <p></p>
+        <p></p>
         <p class="float-end"><a href="#">Back to top</a></p>
         <p>&copy; 2021-2023 Firewall Configuration Website, Inc. &middot; <a href="#">Privacy</a> &middot; <a href="#">Terms</a></p>
     </footer>

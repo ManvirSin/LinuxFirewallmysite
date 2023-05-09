@@ -4,10 +4,13 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.shortcuts import render
+
+from Firewallsite.settings import FIREWALL_IP
 from .models import NAT, CustomUser, FirewallRule
 from django.core.exceptions import ValidationError
 
 class FirewallRuleForm(forms.ModelForm):
+    ip_address = forms.GenericIPAddressField()
     class Meta:
         model = FirewallRule
         fields = [
@@ -20,13 +23,14 @@ class FirewallRuleForm(forms.ModelForm):
         firewall_ip = kwargs.pop('firewall_ip', None)
         user = kwargs.pop('user', None)
         super(FirewallRuleForm, self).__init__(*args, **kwargs)
+        self.fields['source_ip'].initial = FIREWALL_IP
         self.fields['ip_address'].initial = firewall_ip
         self.fields['ip_address'].widget.attrs['readonly'] = True
         self.user = user
 
     def save(self, commit=True):
-        instance = super().save(commit=False)
-        instance.user = self.user
+        instance = super(FirewallRuleForm, self).save(commit=False)
+        instance.source_ip = FIREWALL_IP  # Set the source_ip to the value of FIREWALL_IP
         if commit:
             instance.save()
         return instance
@@ -71,14 +75,14 @@ class CustomUserCreationForm(UserCreationForm):
         
 
 class NatRuleForm(forms.ModelForm):
+    source_ip = forms.GenericIPAddressField()
     class Meta:
         model = NAT
         fields = [
             'user', 'rule_name', 'direction', 'protocol', 'source_port',
-            'destination_ip', 'destination_port', 'target_ip', 'target_port'
+            'destination_ip', 'destination_port', 'target_port'
         ]
         
-    target_ip = forms.GenericIPAddressField(required=True)
         
     def clean(self):
         cleaned_data = super().clean()
@@ -92,6 +96,5 @@ class NatRuleForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         firewall_ip = kwargs.pop('firewall_ip', None)
         super(NatRuleForm, self).__init__(*args, **kwargs)
-        self.fields['source_ip'].initial = firewall_ip
+        self.fields['source_ip'].initial = FIREWALL_IP
         self.fields['source_ip'].widget.attrs['readonly'] = True
-

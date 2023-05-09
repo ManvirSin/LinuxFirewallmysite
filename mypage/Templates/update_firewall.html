@@ -1,0 +1,10 @@
+{% extends 'dashboard.html' %}
+
+{% block content %}
+  <h2>Update Firewall Rule</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Update Rule</button>
+  </form>
+{% endblock %}

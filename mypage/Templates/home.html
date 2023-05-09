@@ -7,6 +7,7 @@
     <meta name="description" content="">
     <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
     <meta name="generator" content="Hugo 0.72.0">
+    
     <title>Firewall Configuration Website</title>
 
     <!-- Bootstrap core CSS -->
@@ -18,12 +19,14 @@
 <body>
 
 <header>
-    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">Firewall Configuration Website</a>
+  <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <img src="{% static 'media/img.png' %}" alt="Your Logo" width="auto" height="30">
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse"
                 aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
+
             </button>
             <div class="collapse navbar-collapse" id="navbarCollapse">
                 <ul class="navbar-nav mr-auto mb-2 mb-md-0">
@@ -66,7 +69,7 @@
     
           <div class="container">
         <hr class="featurette-divider">
-        <h1 class="display-4 text-center mt-5">Welcome To This Linux Firewall Application!</h1>
+        <h1 class="display-3 text-center mt-5 welcome-message" style="margin-top: 150px;">Welcome To This Linux Firewall Application!</h1>
         <p class="lead text-center">This is a Linux packet filtering firewall application built using Django and Python.</p>
         <hr class="my-5">
         <p class="text-center">The application allows users to create, view, and delete firewall
@@ -77,20 +80,23 @@
 
           <div class="row featurette">
             <div class="col-md-7">
-              <h2 class="featurette-heading">First featurette heading. <span class="text-muted">It’ll blow your mind.</span>
+              <h2 class="featurette-heading">How to use the web application<span class="text-muted"> It’ll blow your mind.</span>
               </h2>
-              <p class="lead">To use the Linux firewall configuration webpage, new users would have to create an account and login. 
-                This is to ensure the safety of their account and their firewall rules. Once they have logged in, 
-                they can then create new firewall rules, view existing ones, and delete any they no longer need. 
+              <p class="lead">To begin using the application, go to the "Create Account" page by going on the corresponding link in the navigation bar.
+                Fill in the required fields, such as username, email, and password, then going on to the "Sign Up" button. You will be redirected to 
+                the login page upon successful account creation.
+                Once your account is created, log in using your username and password by going on the "Login" link in the navigation bar.
+                Enter your credentials and click the "Log In" button to access your account.
+                After logging in, you will be directed to the dashboard. Here, you can view existing firewall rules, create new rules, and manage your account.
+                To create a new firewall rule, navigate to the "Create Rule" section in the dashboard. Enter the required information for your rule, such as the source
+                and destination IP addresses, protocol, and action. 
+                Click the "Create Rule" button to save the rule.
+                 
               </p>
             </div>
-            <div class="col-md-5">
-              <svg class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500"
-                height="500" xmlns="http://www.w3.org/2000/svg" aria-label="Placeholder: 500x500"
-                preserveAspectRatio="xMidYMid slice" role="img" focusable="false">
-                <title>Placeholder</title>
-                <rect width="100%" height="100%" fill="#eee" /><text x="50%" y="50%" fill="#aaa" dy=".3em">500x500</text>
-              </svg>
+            <div class="col-md-5 order-md-1">
+              <img src="{% static 'media\linux-154544_960_720.png' %}" alt="Your Image Description" class="featurette-image img-fluid mx-auto" width="500" height="500">
+            </div>
     
             </div>
           </div>
@@ -100,18 +106,17 @@
           <div class="row featurette">
             <div class="col-md-7 order-md-2">
               <h2 class="featurette-heading">Oh yeah, it’s that good. <span class="text-muted">See for yourself.</span></h2>
-              <p class="lead">In terms of the Linux packet filtering firewall, this refers to the built-in firewall functionality
+              <p class="lead">Linux commands are an integral part of the Linux operating system, allowing users to perform various tasks through the command line interface. 
+                The Linux packet filtering firewall, typically managed using the iptables utility, is a built-in feature that secures the system by filtering incoming 
+                and outgoing network traffic based on a set of rules, determining which packets should be allowed or blocked.In terms of the Linux packet filtering firewall,
+                this refers to the built-in firewall functionality
                 within the Linux operating system. It works by using a set of rules to decide which packets should be allowed 
                 through and which should be blocked. These rules are typically defined using iptables, which is a command-line
                 utility for managing firewall rules.</p>
             </div>
-            <div class="col-md-5 order-md-1">
-              <svg class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500"
-                height="500" xmlns="http://www.w3.org/2000/svg" aria-label="Placeholder: 500x500"
-                preserveAspectRatio="xMidYMid slice" role="img" focusable="false">
-                <title>Placeholder</title>
-                <rect width="100%" height="100%" fill="#eee" /><text x="50%" y="50%" fill="#aaa" dy=".3em">500x500</text>
-              </svg>
+              <div class="col-md-5 order-md-1">
+                <img src="{% static 'media\Top_50_Linux_Commands.png' %}" alt="Your Image Description" class="featurette-image img-fluid mx-auto" width="500" height="500">
+              </div>
     
             </div>
           </div>
@@ -121,26 +126,23 @@
           <div class="row featurette">
             <div class="col-md-7">
               <h2 class="featurette-heading">And lastly, this one. <span class="text-muted">Checkmate.</span></h2>
-              <p class="lead">In iptables, there are two main tables: the nat table and the filter table. 
+              <p class="lead">A UI-friendly configuration page offers several advantages over using the command line in Linux. 
+              It provides a more accessible and intuitive interface, especially for users who may not be familiar with terminal commands. 
+              Additionally, it streamlines the process of creating, editing, and managing firewall rules by organizing information in a visually appealing manner. 
+              This ultimately reduces the risk of errors and enhances overall productivity.In iptables, there are two main tables: the nat table and the filter table. 
               The nat table is used for network address translation (NAT) and is responsible for rewriting 
               the source or destination IP address of packets as they pass through the firewall. 
               The filter table is used for packet filtering and is responsible for deciding which packets 
               should be allowed through and which should be blocked based on a set of rules.</p>
             </div>
-            <div class="col-md-5">
-              <svg class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500"
-                height="500" xmlns="http://www.w3.org/2000/svg" aria-label="Placeholder: 500x500"
-                preserveAspectRatio="xMidYMid slice" role="img" focusable="false">
-                <title>Placeholder</title>
-                <rect width="100%" height="100%" fill="#eee" /><text x="50%" y="50%" fill="#aaa" dy=".3em">500x500</text>
-              </svg>
-    
+            <div class="col-md-5 order-md-1">
+              <img src="{% static 'media\limg.png' %}" alt="Your Image Description" class="featurette-image img-fluid mx-auto" width="500" height="500">
+            </div>     
+              
             </div>
           </div>
     
           <hr class="featurette-divider">
-    
-          <!-- /END THE FEATURETTES -->
   
     
         <!-- FOOTER -->
