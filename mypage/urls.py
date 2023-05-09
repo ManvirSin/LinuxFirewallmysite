@@ -18,7 +18,6 @@ urlpatterns = [
     path('configuration/<int:pk>/', views.ConfigurationView.as_view(), name='configuration'),
     path('natconfig/', views.natconfig_view, name='natconfig'),
     path('create_account/', AccountView.as_view(), name='create_account'),
-    path('accounts/', include('django.contrib.auth.urls')),
     path('update_account/', views.update_account, name='update_account'),
     path('firewall/update/<int:pk>/', views.update_firewall_rule, name='update_firewall_rule'),
     path('firewall/', views.firewall_view, name='firewall'),
